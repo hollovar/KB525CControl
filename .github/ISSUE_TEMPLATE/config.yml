@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/hollovar/KB525CControl/tree/main/docs
+    about: Configuration, signals, the pipe protocol and integrations.
+  - name: Project page
+    url: https://hollovar.github.io/kb525c/
+    about: Overview, screenshots and the privacy statement.

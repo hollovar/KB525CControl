@@ -1,0 +1,82 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed only by the release step, on tags
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore KB525CControl.slnx
+
+      - name: Build
+        run: dotnet build KB525CControl.slnx -c Release --no-restore
+
+      - name: Publish self-contained executables
+        shell: pwsh
+        run: .\tools\publish.ps1
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $ver = ([xml](Get-Content KB525CControl\KB525CControl.csproj)).Project.PropertyGroup.Version
+          $name = "KB525CControl-$ver-win-x64"
+          Compress-Archive -Path dist\* -DestinationPath "$name.zip"
+          "ARCHIVE=$name.zip" | Out-File $env:GITHUB_ENV -Append
+          Get-FileHash "$name.zip" -Algorithm SHA256 | Format-List
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARCHIVE }}
+          path: ${{ env.ARCHIVE }}
+
+      - name: GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ARCHIVE }}
+          generate_release_notes: true
+          body: |
+            Self-contained Windows x64 build — no .NET installation needed. The zip contains
+            `KB525CControl.exe` (tray app), `kb525c.exe` (command-line client), `install.ps1` and
+            `uninstall.ps1`.
+
+            ### Install
+
+            1. Unzip anywhere, open PowerShell in that folder.
+            2. `powershell -ExecutionPolicy Bypass -File .\install.ps1`
+               — copies the executables to `%LOCALAPPDATA%\KB525CControl`, adds that folder to
+               your user `PATH`, registers autostart, **disables the `DPMService` service** (UAC
+               prompt) and starts the app. Switches: `-NoAutostart`, `-KeepDellService`.
+            3. Look for the tray icon; right/left click → *Settings…*.
+
+            `DPMService` (Dell Peripheral Manager) holds the keyboard's command channel
+            exclusively, so the app cannot work while it runs. You lose only the factory Zoom
+            integration of the four buttons and DPM firmware updates; ordinary keys are unaffected.
+            Undo: `.\uninstall.ps1 -RestoreDellService`.
+
+            ### Upgrade
+
+            Run `install.ps1` from the new zip; it stops the running instance and replaces the files.
+            Your `config.json` is kept.
+
+            Full documentation: [README](https://github.com/hollovar/KB525CControl#readme) ·
+            [docs/](https://github.com/hollovar/KB525CControl/tree/main/docs) ·
+            [CHANGELOG](https://github.com/hollovar/KB525CControl/blob/main/CHANGELOG.md)

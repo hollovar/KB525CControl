@@ -126,7 +126,7 @@ elseif ($svc.StartType -eq 'Disabled' -and $svc.Status -eq 'Stopped') {
 }
 else {
     Write-Step 'Disabling Dell Peripheral Manager (administrator rights required)'
-    Write-Warn2 'This removes the factory Zoom/Teams integration of the buttons and firmware updates.'
+    Write-Warn2 'This removes the factory Zoom integration of the buttons and DPM firmware updates.'
     Write-Warn2 'Undo: Set-Service DPMService -StartupType Automatic; Start-Service DPMService'
 
     $inner = @'

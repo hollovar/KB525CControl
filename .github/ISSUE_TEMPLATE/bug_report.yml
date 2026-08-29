@@ -1,0 +1,46 @@
+name: Bug report
+description: Something does not work as documented
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Two commands answer most questions — please paste their output below:
+        `kb525c status --json` and `kb525c log 80`.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: status
+    attributes:
+      label: kb525c status --json
+      render: json
+  - type: textarea
+    id: log
+    attributes:
+      label: kb525c log 80
+      description: Tray menu → Log → Copy works too.
+      render: text
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: e.g. Windows 11 24H2 (26100)
+  - type: dropdown
+    id: dpm
+    attributes:
+      label: DPMService (Dell Peripheral Manager)
+      options:
+        - disabled (as install.ps1 does)
+        - running
+        - not installed
+        - not sure
+  - type: input
+    id: app
+    attributes:
+      label: Meeting application, if relevant
+      placeholder: e.g. Teams 25xxx, Google Meet in Chrome 1xx

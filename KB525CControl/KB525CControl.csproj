@@ -9,6 +9,15 @@
     <AssemblyName>KB525CControl</AssemblyName>
     <RootNamespace>KB525CControl</RootNamespace>
     <Version>0.5.0</Version>
+
+    <Product>KB525C Control</Product>
+    <Description>Custom handling of the Dell KB525C collaboration buttons: meeting controls, launchers, macros and LED signals - without Dell Peripheral Manager.</Description>
+    <Authors>András Bükki-Deme</Authors>
+    <Company>Hollovar Labs</Company>
+    <Copyright>Copyright © 2026 András Bükki-Deme</Copyright>
+    <RepositoryUrl>https://github.com/hollovar/KB525CControl</RepositoryUrl>
+    <PackageProjectUrl>https://hollovar.github.io/kb525c/</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
