@@ -9,7 +9,7 @@
     <RootNamespace>KB525CCli</RootNamespace>
     <InvariantGlobalization>true</InvariantGlobalization>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
-    <Version>0.5.0</Version>
+    <Version>0.6.0</Version>
 
     <Product>KB525C Control</Product>
     <Description>Command-line client of KB525C Control: LED signals, status and control of the tray app over its named pipe.</Description>

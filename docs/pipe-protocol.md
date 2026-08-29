@@ -33,8 +33,8 @@ The definitions live in `KB525CControl/Ipc/PipeProtocol.cs`, which the CLI compi
 file — the protocol has one source of truth.
 
 The `status` object contains the version, whether the keyboard is connected, the mode and the
-current layer, whether the buttons are enabled and the LED frame (`"VSCM"` style), microphone and
-camera state, the meeting app in front, and the playing / sticky / queued signals. `kb525c status
+current layer, whether the buttons are enabled, the LED frame (`"VSCM"` style) and `ledsAsleep`
+(the idle-layer LED sleep is holding them dark), microphone and camera state, the meeting app in front, and the playing / sticky / queued signals. `kb525c status
 --json` prints it verbatim.
 
 ## Samples

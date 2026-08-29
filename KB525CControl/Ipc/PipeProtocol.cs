@@ -98,6 +98,8 @@ public sealed class IpcStatus
     public bool? Muted { get; set; }
     /// <summary>The LED state most recently sent to the device, in pattern form (e.g. "VSCM").</summary>
     public string Leds { get; set; } = "";
+    /// <summary>True while the idle-layer LEDs are dark because of the sleep timeout.</summary>
+    public bool LedsAsleep { get; set; }
     public string? ForegroundApp { get; set; }
     public IpcSignalInfo? Playing { get; set; }
     public IpcSignalInfo? Sticky { get; set; }

@@ -18,6 +18,8 @@ public enum Layer { Off, Meeting, Idle }
 ///   - idle layer otherwise (Layered mode): launchers, macros, hotkeys; optional double press
 ///   - external programs (kb525c CLI, Claude Code hooks, scripts) can request LED signals;
 ///     any collab button acknowledges a sticky signal
+///   - optional LED sleep in the idle layer: after N seconds without mouse/keyboard input
+///     the LEDs go dark; a signal or a button press wakes them (that press does nothing else)
 ///   - if the keyboard is missing, is a different model, or its channel is busy, a tray
 ///     balloon says so and the icon turns grey
 /// </summary>
@@ -26,6 +28,7 @@ public sealed class TrayApp : ApplicationContext
     readonly Kb525cDevice _device = new();
     readonly MediaUsageMonitor _media = new();
     readonly MicMute _mic = new();
+    readonly InputIdleMonitor _inputIdle = new();
     readonly SignalEngine _signals;
     readonly PipeServer _ipc;
     readonly NotifyIcon _tray;
@@ -38,6 +41,9 @@ public sealed class TrayApp : ApplicationContext
     AppConfig _config;
     Icon? _currentIcon;
     bool _hadDeviceError;
+    bool _ledsAsleep;
+    bool _signalWasPlaying;
+    string _wakeReason = "mouse/keyboard";
     OsdForm? _osd;
     LogForm? _logForm;
     Settings.SettingsForm? _settingsForm;
@@ -71,10 +77,11 @@ public sealed class TrayApp : ApplicationContext
         _device.Log += line => BeginInvokeUi(() => AddLog(line));
 
         _media.Changed += (_, _) => BeginInvokeUi(Refresh);
+        _inputIdle.Changed += _ => BeginInvokeUi(Refresh);
 
         _signals = new SignalEngine(_device);
         _signals.Log += line => BeginInvokeUi(() => AddLog(line));
-        _signals.StateChanged += () => BeginInvokeUi(UpdateTooltip);
+        _signals.StateChanged += () => BeginInvokeUi(OnSignalStateChanged);
 
         _ipc = new PipeServer(HandleIpc);
         _ipc.Log += line => BeginInvokeUi(() => AddLog(line));
@@ -87,6 +94,7 @@ public sealed class TrayApp : ApplicationContext
 
         _signals.Start();
         _media.Start();
+        _inputIdle.Start();
         _device.Start();
         _ipc.Start();
         Refresh();
@@ -113,6 +121,7 @@ public sealed class TrayApp : ApplicationContext
     {
         var layer = CurrentLayer;
         var muted = _config.MicLedFollowsSystemMute && (_mic.IsMuted ?? false);
+        _inputIdle.ThresholdMs = Math.Max(0, _config.Idle.SleepAfterSeconds) * 1000;
 
         bool enabled;
         CollabLed leds;
@@ -139,6 +148,21 @@ public sealed class TrayApp : ApplicationContext
                 break;
         }
 
+        // LED sleep: idle layer only, never while a signal plays. The buttons stay enabled
+        // (a disabled row would not report presses), only the LEDs go dark.
+        var asleep = layer == Layer.Idle && _config.Idle.SleepAfterSeconds > 0
+                     && _signals.Playing is null && _inputIdle.IsIdle;
+        if (asleep != _ledsAsleep)
+        {
+            _ledsAsleep = asleep;
+            var after = _config.Idle.SleepAfterSeconds;
+            AddLog(asleep
+                ? $"LEDs asleep ({(after % 60 == 0 ? $"{after / 60} min" : $"{after} s")} without input)"
+                : $"LEDs awake ({_wakeReason})");
+        }
+        _wakeReason = "mouse/keyboard";
+        if (asleep) leds = CollabLed.None;
+
         _baseLeds = enabled ? leds : CollabLed.None;
 
         // The signal engine is the only writer to the device; this is just the base state
@@ -160,6 +184,19 @@ public sealed class TrayApp : ApplicationContext
         if (Lit(CollabButton.Chat)) leds |= CollabLed.ChatWhite;
         if (Lit(CollabButton.Mic)) leds |= muted ? CollabLed.MicRed : CollabLed.MicWhite;
         return leds;
+    }
+
+    /// <summary>
+    /// A signal started or ended. The end of a signal counts as activity, so the sleep
+    /// countdown starts over; a signal that starts while asleep is what woke the LEDs.
+    /// </summary>
+    void OnSignalStateChanged()
+    {
+        var playing = _signals.Playing is not null;
+        if (_signalWasPlaying && !playing) _inputIdle.Touch();
+        else if (playing && _ledsAsleep) _wakeReason = "signal";
+        _signalWasPlaying = playing;
+        Refresh();
     }
 
     /// <summary>Keyboard missing / wrong model / channel busy -> balloon; recovered -> balloon.</summary>
@@ -192,6 +229,10 @@ public sealed class TrayApp : ApplicationContext
             var layer = CurrentLayer;
             AddLog($"{button} pressed ({layer})");
 
+            // The OS does not see collab presses as input; count them for the LED sleep.
+            var wasAsleep = _ledsAsleep;
+            _inputIdle.Touch();
+
             // While the row is blinking, a press only means "seen": the signal stops, a
             // popup says what it was about, the signal's ack action (if any) runs - and the
             // button's normal function does NOT fire. That is what people press for.
@@ -203,6 +244,16 @@ public sealed class TrayApp : ApplicationContext
                 Osd(why, 2000);
                 if (!string.IsNullOrWhiteSpace(acknowledged.OnAck))
                     RunAction(ParseAckAction(acknowledged.OnAck), button, layer, "ack");
+                Refresh();
+                return;
+            }
+
+            // Asleep: the press only wakes the LEDs; the button's function does NOT fire.
+            if (wasAsleep)
+            {
+                AddLog("  (LEDs were asleep - woke them, no action)");
+                _wakeReason = $"{button} button";
+                Osd("LEDs woke up", 1200);
                 Refresh();
                 return;
             }
@@ -582,8 +633,9 @@ public sealed class TrayApp : ApplicationContext
                     || button == CollabButton.None)
                     return IpcResponse.Fail("button must be one of: mic, video, share, chat");
                 AddLog($"IPC: simulated {button} press");
+                var wakesOnly = _ledsAsleep;
                 OnButtonPressed(button);
-                return IpcResponse.Success($"{button} pressed ({CurrentLayer})");
+                return IpcResponse.Success($"{button} pressed ({CurrentLayer}){(wakesOnly ? " - woke the LEDs, no action" : "")}");
             }
 
             default:
@@ -607,6 +659,7 @@ public sealed class TrayApp : ApplicationContext
             CameraInUse = _media.CameraInUse,
             Muted = _mic.IsMuted,
             Leds = LedPattern.Describe(_signals.LastLeds),
+            LedsAsleep = _ledsAsleep,
             ForegroundApp = fg is null ? null : MeetingAppDetector.DisplayName(fg),
             Playing = ToInfo(_signals.Playing),
             Sticky = ToInfo(_signals.StickySignal),
@@ -797,7 +850,7 @@ public sealed class TrayApp : ApplicationContext
             parts.Add(CurrentLayer switch
             {
                 Layer.Off => "standby (no meeting)",
-                Layer.Idle => "idle layer",
+                Layer.Idle => _ledsAsleep ? "idle layer - LEDs asleep" : "idle layer",
                 _ => (_mic.IsMuted ?? false) ? "meeting - muted" : "meeting - mic live"
             });
 
@@ -970,6 +1023,7 @@ public sealed class TrayApp : ApplicationContext
         _signals.Dispose();
         _device.Dispose();
         _media.Dispose();
+        _inputIdle.Dispose();
         _mic.Dispose();
         _osd?.Dispose();
         _logForm?.Dispose();

@@ -6,6 +6,15 @@ All notable changes to KB525C Control are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-08-29
+
+### Added
+- **LED sleep** for the idle layer (`idle.sleepAfterSeconds`, *Idle buttons* page): the LEDs go
+  dark after N seconds without mouse or keyboard input (on by default, 300 s). A signal or a
+  button press wakes them; the waking press does not run the button's action. `kb525c status`
+  shows `ledsAsleep`.
+
+### Changed
 - Public repository: restructured README, reference documentation under `docs/`, CI build and
   release workflow, issue template.
 

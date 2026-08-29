@@ -38,6 +38,8 @@ public sealed class SettingsForm : Form
     // Idle layer
     readonly ComboBox _idleLeds = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 600, DropDownWidth = 600 };
     readonly NumericUpDown _doubleMs = new() { Minimum = 100, Maximum = 1000, Increment = 50, Width = 80 };
+    readonly CheckBox _sleepEnabled = new() { AutoSize = true, Text = "Turn the LEDs off after" };
+    readonly NumericUpDown _sleepSec = new() { Minimum = 5, Maximum = 86400, Increment = 5, Width = 90 };
     readonly Dictionary<CollabButton, (ActionEditor Press, ActionEditor Double)> _idle = new();
 
     // Meeting apps
@@ -266,6 +268,16 @@ public sealed class SettingsForm : Form
             Row(p, "Double-press window (ms)", _doubleMs,
                 "Only buttons WITH a double-press action wait this long after a press to see whether a second press follows; the others fire immediately. 250-350 ms feels natural.");
 
+            var sleep = new FlowLayoutPanel { AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = false };
+            _sleepEnabled.Margin = new Padding(0, 4, 6, 0);
+            _sleepSec.Margin = new Padding(0, 0, 6, 0);
+            sleep.Controls.Add(_sleepEnabled);
+            sleep.Controls.Add(_sleepSec);
+            sleep.Controls.Add(new Label { AutoSize = true, Text = "seconds without mouse or keyboard activity", Margin = new Padding(0, 4, 0, 0) });
+            _sleepEnabled.CheckedChanged += (_, _) => _sleepSec.Enabled = _sleepEnabled.Checked;
+            Row(p, "LED sleep", sleep,
+                "Idle layer only - never during a meeting. A LED signal or any of the four buttons wakes the LEDs; that button press only wakes them, its action does not run. The countdown starts over after every signal and button press. 300 = 5 minutes.");
+
             foreach (var (button, name) in Buttons)
             {
                 var press = new ActionEditor("Press");
@@ -488,6 +500,9 @@ public sealed class SettingsForm : Form
 
         _idleLeds.SelectedIndex = (int)_cfg.Idle.Leds;
         _doubleMs.Value = Math.Clamp(_cfg.Idle.DoublePressMs, (int)_doubleMs.Minimum, (int)_doubleMs.Maximum);
+        _sleepEnabled.Checked = _cfg.Idle.SleepAfterSeconds > 0;
+        _sleepSec.Value = Math.Clamp(_cfg.Idle.SleepAfterSeconds > 0 ? _cfg.Idle.SleepAfterSeconds : 300, (int)_sleepSec.Minimum, (int)_sleepSec.Maximum);
+        _sleepSec.Enabled = _sleepEnabled.Checked;
         foreach (var (button, _) in Buttons)
         {
             var b = _cfg.Idle.For(button);
@@ -616,6 +631,7 @@ public sealed class SettingsForm : Form
 
         _cfg.Idle.Leds = (IdleLeds)_idleLeds.SelectedIndex;
         _cfg.Idle.DoublePressMs = (int)_doubleMs.Value;
+        _cfg.Idle.SleepAfterSeconds = _sleepEnabled.Checked ? (int)_sleepSec.Value : 0;
         foreach (var (button, _) in Buttons)
         {
             var target = _cfg.Idle.For(button);

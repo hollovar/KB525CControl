@@ -118,6 +118,13 @@ public sealed class IdleLayer
     /// <summary>Double-press window in ms (100-1000).</summary>
     public int DoublePressMs { get; set; } = 300;
 
+    /// <summary>
+    /// Seconds without mouse or keyboard activity after which the idle-layer LEDs go dark;
+    /// 0 = never; default 300 (5 minutes). A LED signal or any collab button wakes them; that
+    /// press only wakes.
+    /// </summary>
+    public int SleepAfterSeconds { get; set; } = 300;
+
     public IdleButton Mic { get; set; } = new() { Press = new ButtonAction { Kind = ActionKind.ToggleMicMute } };
     public IdleButton Video { get; set; } = new();
     public IdleButton Share { get; set; } = new()

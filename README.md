@@ -175,6 +175,11 @@ front, otherwise the Explorer window in front, the desktop, the last Explorer wi
 profile. Any button can also have a `double` action; a hotkey, a macro, a URL or a document work
 just as well as a program.
 
+**LED sleep** (on by default, 5 minutes; *Idle buttons* page or `idle.sleepAfterSeconds`, 0 = off):
+after the set time without mouse or keyboard activity the idle-layer LEDs go dark. A signal or any of the four
+buttons wakes them — that press only wakes, the button's action does not run — and the countdown
+restarts after every signal and press. Never during a meeting.
+
 The full list of action types, the macro format and the environment variables handed to launched
 programs are in [docs/configuration.md](docs/configuration.md).
 
@@ -184,7 +189,7 @@ Tray menu → **Settings…** (or `kb525c settings`). Seven pages, every option 
 its control; *Save & apply* validates and applies immediately.
 
 <p align="center">
-  <img src="docs/images/settings-idle.png" width="49%" alt="Settings window, Idle buttons page: LEDs outside meetings, double-press window, and the Video button set to run SpeedCrunch in the active folder">
+  <img src="docs/images/settings-idle.png" width="49%" alt="Settings window, Idle buttons page: LEDs outside meetings, double-press window, LED sleep after 300 seconds, and the Video button set to run SpeedCrunch in the active folder">
   <img src="docs/images/settings-signals.png" width="49%" alt="Settings window, Signals page: sticky timeout, the named preset table with the bounce pattern, and the pattern language reference">
 </p>
 
@@ -196,6 +201,7 @@ The underlying file is `%APPDATA%\KB525CControl\config.json` (tray menu → **Op
   "mode": "Layered",
   "idle": {
     "leds": "Assigned",                                  // white where an action exists
+    "sleepAfterSeconds": 300,                            // LEDs dark after 5 min without input (0 = never)
     "mic":   { "press": { "kind": "ToggleMicMute" } },
     "video": { "press": { "kind": "RunInActiveFolder", "value": "C:\\Program Files (x86)\\SpeedCrunch\\speedcrunch.exe" } },
     "share": { "press": { "kind": "RunInActiveFolder", "value": "wt.exe", "arguments": "-d ." } },

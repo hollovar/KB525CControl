@@ -53,6 +53,7 @@ and predictably. Double press exists only in the idle layer, only for the button
   "idle": {
     "leds": "Assigned",              // Off | Assigned (white where an action exists) | All
     "doublePressMs": 300,
+    "sleepAfterSeconds": 300,        // LEDs dark after N s without mouse/keyboard input; 0 = never
     "mic":   { "press": { "kind": "ToggleMicMute" } },
     "video": { "press": { "kind": "RunInActiveFolder", "value": "C:\\Program Files (x86)\\SpeedCrunch\\speedcrunch.exe" } },
     "share": { "press":  { "kind": "RunInActiveFolder", "value": "wt.exe", "arguments": "-d ." },
@@ -86,6 +87,16 @@ and predictably. Double press exists only in the idle layer, only for the button
 
 The factory defaults ship a mild idle layer: Mic = OS mute toggle, Share = Windows Terminal in the
 active folder, Video and Chat unassigned (dark).
+
+### LED sleep (`idle.sleepAfterSeconds`)
+
+On by default (300 = 5 minutes; 0 turns it off). The idle-layer LEDs go dark after that long without mouse or
+keyboard activity (read from Windows' last-input time — no hook, no keystrokes seen). Anything
+that has something to show wakes them: a LED signal plays as usual and the row stays lit
+afterwards; a collab button press wakes them **without running the button's action** (a short
+popup says so). The countdown restarts after every signal and every press. The buttons stay
+enabled while asleep, and the option applies only to the idle layer — a meeting always lights the
+row. `kb525c status` reports `ledsAsleep`.
 
 ## Action types (`kind`)
 

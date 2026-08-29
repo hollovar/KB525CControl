@@ -128,7 +128,7 @@ static class Cli
         Console.WriteLine($"KB525C Control {s.AppVersion}");
         Console.WriteLine($"  keyboard   : {(s.Connected ? "connected" : s.DeviceError ?? "not available")}");
         Console.WriteLine($"  mode       : {s.Mode}");
-        Console.WriteLine($"  layer      : {s.Layer}   buttons: {(s.ButtonsActive ? "active" : "inactive")}   LEDs: {s.Leds}");
+        Console.WriteLine($"  layer      : {s.Layer}   buttons: {(s.ButtonsActive ? "active" : "inactive")}   LEDs: {s.Leds}{(s.LedsAsleep ? " (asleep)" : "")}");
         Console.WriteLine($"  microphone : {(s.MicInUse ? "in use" : "free")}, {(s.Muted switch { true => "muted", false => "live", null => "?" })}");
         Console.WriteLine($"  camera     : {(s.CameraInUse ? "in use" : "free")}");
         Console.WriteLine($"  foreground : {s.ForegroundApp ?? "-"}");
