@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>kb525c</AssemblyName>
+    <RootNamespace>KB525CCli</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <!-- A protokoll es a kliens a talcaalkalmazasbol jon, hogy egy helyen legyen definialva. -->
+  <ItemGroup>
+    <Compile Include="..\KB525CControl\Ipc\PipeProtocol.cs" Link="Ipc\PipeProtocol.cs" />
+    <Compile Include="..\KB525CControl\Ipc\PipeClient.cs" Link="Ipc\PipeClient.cs" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,4 @@
+﻿<Solution>
+  <Project Path="KB525CControl/KB525CControl.csproj" />
+  <Project Path="KB525CCli/KB525CCli.csproj" />
+</Solution>
