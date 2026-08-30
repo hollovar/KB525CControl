@@ -203,8 +203,21 @@ C:\Projects" — for every button press that does something. It never takes the 
 patterns, usable as `kb525c signal <name>`, and may override the built-in names. The pattern
 language and the behaviour of the queue are in [signals.md](signals.md).
 
-## Known limitations
+## Known limitations and workarounds
 
+- **A launched program's window opens behind the current one / only flashes on the taskbar.**
+  Windows lets only the foreground process, or the process that received the last user input,
+  activate a window — and a program inherits that right from whoever started it. The tray app
+  is neither (a button press is a HID report, not user input in Windows' eyes), so a program it
+  starts gets its window but not the focus. That is also why it *does* work right after you
+  closed the Settings window: for a moment the app is the last one you interacted with.
+  Since 0.6.1 the app handles this itself: after `Run`, `RunInActiveFolder` and a `FocusOrLaunch`
+  launch it waits up to 6 s for the new window and brings it to the front (the log says
+  `brought the new window to the front`). When no new window appears — a single-instance program
+  handed the request to its running copy, or the terminal opened a tab in an existing window —
+  it falls back to the program's process name (`wt.exe` → `WindowsTerminal`).
+  Workaround, and the better choice for single-instance programs anyway: use `FocusOrLaunch`;
+  pressing the button again while the program runs brings its window forward.
 - Shortcuts only reach the **focused** window. If the meeting window is not in front, the Mic
   button still mutes at the OS level, but the app UI does not follow. The log says so.
 - **Google Meet has no screen-share shortcut**, so `apps.meet.share` is empty by default. Usable

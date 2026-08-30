@@ -384,8 +384,10 @@ public sealed class TrayApp : ApplicationContext
 
                 try
                 {
+                    var before = WindowFocus.Snapshot();
                     var what = ProcessLauncher.Start(action.Value, action.Arguments, folder, BuildEnvironment(ctx, folder));
                     AddLog($"  started: {what}");
+                    FocusAfterLaunch(before, WindowFocus.ProcessNameFor(action.Value));
                     return what;
                 }
                 catch (Exception ex)
@@ -398,8 +400,10 @@ public sealed class TrayApp : ApplicationContext
             case ActionKind.FocusOrLaunch:
             {
                 if (string.IsNullOrWhiteSpace(action.Value)) { AddLog("  empty process name"); return "empty process name"; }
-                WindowFocus.FocusOrLaunch(action.Value, out var what);
+                var before = WindowFocus.Snapshot();
+                WindowFocus.FocusOrLaunch(action.Value, out var what, out var launched);
                 AddLog("  " + what);
+                if (launched) FocusAfterLaunch(before, WindowFocus.ProcessNameFor(action.Value));
                 return what;
             }
 
@@ -417,6 +421,40 @@ public sealed class TrayApp : ApplicationContext
                 AddLog($"  no action assigned to the {ctx.Button} button ({ctx.Layer})");
                 return null;
         }
+    }
+
+    /// <summary>
+    /// A program started by the tray app gets its window, but Windows does not activate it:
+    /// the launcher (this app) is not the foreground process and a HID report is not user
+    /// input, so the new window only flashes on the taskbar. Wait for the window that was not
+    /// in <paramref name="before"/> and bring it to the front the same way FocusOrLaunch does.
+    /// When no new window appears (single-instance program handed the request to its running
+    /// copy, terminal opened a tab in an existing window), fall back to the process by name.
+    /// </summary>
+    void FocusAfterLaunch(HashSet<IntPtr> before, string? processName)
+    {
+        const int timeoutMs = 6000;
+        _ = Task.Run(() =>
+        {
+            var hwnd = WindowFocus.WaitForNewWindow(before, timeoutMs);
+            BeginInvokeUi(() =>
+            {
+                if (hwnd != IntPtr.Zero)
+                {
+                    if (!WindowFocus.StillExists(hwnd)) return;
+                    if (WindowFocus.IsForeground(hwnd)) { AddLog("  new window is in front"); return; }
+                    AddLog(WindowFocus.Force(hwnd)
+                        ? "  brought the new window to the front"
+                        : "  could not bring the new window to the front");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(processName)) return;
+                AddLog(WindowFocus.BringToFront(processName)
+                    ? $"  no new window within {timeoutMs / 1000} s; brought {processName} to the front"
+                    : $"  no new window within {timeoutMs / 1000} s (and no {processName} window to bring to the front)");
+            });
+        });
     }
 
     async Task RunMacroAsync(List<MacroStep> steps, IReadOnlyDictionary<string, string> env)

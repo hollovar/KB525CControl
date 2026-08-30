@@ -47,36 +47,66 @@ jobs:
           name: ${{ env.ARCHIVE }}
           path: ${{ env.ARCHIVE }}
 
+      # The release text = this version's section of CHANGELOG.md, then the install notes.
+      - name: Release notes from CHANGELOG
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $ver = ([xml](Get-Content KB525CControl\KB525CControl.csproj)).Project.PropertyGroup.Version
+          $tagVer = "${{ github.ref_name }}".TrimStart('v')
+          if ($tagVer -ne $ver) { Write-Warning "tag $tagVer does not match csproj version $ver" }
+
+          $lines = Get-Content CHANGELOG.md
+          $start = -1
+          for ($i = 0; $i -lt $lines.Count; $i++) { if ($lines[$i] -match "^## \[$([regex]::Escape($ver))\]") { $start = $i + 1; break } }
+          if ($start -lt 0) {
+            Write-Warning "CHANGELOG.md has no '## [$ver]' section - the release gets only the install notes"
+            $notes = ''
+          } else {
+            $end = $lines.Count
+            for ($i = $start; $i -lt $lines.Count; $i++) { if ($lines[$i] -match '^## \[') { $end = $i; break } }
+            $notes = ($lines[$start..($end - 1)] -join "`n").Trim()
+          }
+
+          $install = @'
+          ---
+
+          Self-contained Windows x64 build — no .NET installation needed. The zip contains
+          `KB525CControl.exe` (tray app), `kb525c.exe` (command-line client), `install.ps1` and
+          `uninstall.ps1`.
+
+          ### Install
+
+          1. Unzip anywhere, open PowerShell in that folder.
+          2. `powershell -ExecutionPolicy Bypass -File .\install.ps1`
+             — copies the executables to `%LOCALAPPDATA%\KB525CControl`, adds that folder to
+             your user `PATH`, registers autostart, **disables the `DPMService` service** (UAC
+             prompt) and starts the app. Switches: `-NoAutostart`, `-KeepDellService`.
+          3. Look for the tray icon; right/left click → *Settings…*.
+
+          `DPMService` (Dell Peripheral Manager) holds the keyboard's command channel
+          exclusively, so the app cannot work while it runs. You lose only the factory Zoom
+          integration of the four buttons and DPM firmware updates; ordinary keys are unaffected.
+          Undo: `.\uninstall.ps1 -RestoreDellService`.
+
+          ### Upgrade
+
+          Run `install.ps1` from the new zip; it stops the running instance and replaces the files.
+          Your `config.json` is kept.
+
+          Full documentation: [README](https://github.com/hollovar/KB525CControl#readme) ·
+          [docs/](https://github.com/hollovar/KB525CControl/tree/main/docs) ·
+          [CHANGELOG](https://github.com/hollovar/KB525CControl/blob/main/CHANGELOG.md)
+          '@
+
+          $body = if ($notes) { "$notes`n`n$install" } else { $install }
+          [System.IO.File]::WriteAllText("release-notes.md", $body, (New-Object System.Text.UTF8Encoding $false))
+          Write-Host $body
+
       - name: GitHub release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ env.ARCHIVE }}
           generate_release_notes: true
-          body: |
-            Self-contained Windows x64 build — no .NET installation needed. The zip contains
-            `KB525CControl.exe` (tray app), `kb525c.exe` (command-line client), `install.ps1` and
-            `uninstall.ps1`.
-
-            ### Install
-
-            1. Unzip anywhere, open PowerShell in that folder.
-            2. `powershell -ExecutionPolicy Bypass -File .\install.ps1`
-               — copies the executables to `%LOCALAPPDATA%\KB525CControl`, adds that folder to
-               your user `PATH`, registers autostart, **disables the `DPMService` service** (UAC
-               prompt) and starts the app. Switches: `-NoAutostart`, `-KeepDellService`.
-            3. Look for the tray icon; right/left click → *Settings…*.
-
-            `DPMService` (Dell Peripheral Manager) holds the keyboard's command channel
-            exclusively, so the app cannot work while it runs. You lose only the factory Zoom
-            integration of the four buttons and DPM firmware updates; ordinary keys are unaffected.
-            Undo: `.\uninstall.ps1 -RestoreDellService`.
-
-            ### Upgrade
-
-            Run `install.ps1` from the new zip; it stops the running instance and replaces the files.
-            Your `config.json` is kept.
-
-            Full documentation: [README](https://github.com/hollovar/KB525CControl#readme) ·
-            [docs/](https://github.com/hollovar/KB525CControl/tree/main/docs) ·
-            [CHANGELOG](https://github.com/hollovar/KB525CControl/blob/main/CHANGELOG.md)
+          body_path: release-notes.md

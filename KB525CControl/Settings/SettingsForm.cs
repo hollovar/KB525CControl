@@ -25,21 +25,21 @@ public sealed class SettingsForm : Form
     readonly Label _status = new() { AutoSize = true, ForeColor = Color.Firebrick, Margin = new Padding(8, 8, 0, 0) };
 
     // General
-    readonly ComboBox _mode = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 600, DropDownWidth = 600 };
+    readonly WheelSafeComboBox _mode = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 600, DropDownWidth = 600 };
     readonly Label _modeHelp = new();
     readonly CheckBox _micLed = new() { AutoSize = true, Text = "Mic LED follows the Windows mute state (red while muted)" };
     readonly CheckBox _videoLed = new() { AutoSize = true, Text = "Video LED follows real camera usage" };
-    readonly NumericUpDown _menuFont = new() { Minimum = 7, Maximum = 30, Width = 80 };
+    readonly WheelSafeNumericUpDown _menuFont = new() { Minimum = 7, Maximum = 30, Width = 80 };
     readonly TextBox _editor = new() { Width = 420 };
 
     // Meeting layer
     readonly Dictionary<CollabButton, ActionEditor> _meeting = new();
 
     // Idle layer
-    readonly ComboBox _idleLeds = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 600, DropDownWidth = 600 };
-    readonly NumericUpDown _doubleMs = new() { Minimum = 100, Maximum = 1000, Increment = 50, Width = 80 };
+    readonly WheelSafeComboBox _idleLeds = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 600, DropDownWidth = 600 };
+    readonly WheelSafeNumericUpDown _doubleMs = new() { Minimum = 100, Maximum = 1000, Increment = 50, Width = 80 };
     readonly CheckBox _sleepEnabled = new() { AutoSize = true, Text = "Turn the LEDs off after" };
-    readonly NumericUpDown _sleepSec = new() { Minimum = 5, Maximum = 86400, Increment = 5, Width = 90 };
+    readonly WheelSafeNumericUpDown _sleepSec = new() { Minimum = 5, Maximum = 86400, Increment = 5, Width = 90 };
     readonly Dictionary<CollabButton, (ActionEditor Press, ActionEditor Double)> _idle = new();
 
     // Meeting apps
@@ -47,11 +47,11 @@ public sealed class SettingsForm : Form
 
     // OSD
     readonly CheckBox _osdEnabled = new() { AutoSize = true, Text = "Show the on-screen popup when a button does something" };
-    readonly NumericUpDown _osdMs = new() { Minimum = 200, Maximum = 10000, Increment = 100, Width = 80 };
-    readonly NumericUpDown _osdFont = new() { Minimum = 8, Maximum = 40, Width = 80 };
+    readonly WheelSafeNumericUpDown _osdMs = new() { Minimum = 200, Maximum = 10000, Increment = 100, Width = 80 };
+    readonly WheelSafeNumericUpDown _osdFont = new() { Minimum = 8, Maximum = 40, Width = 80 };
 
     // Signals
-    readonly NumericUpDown _stickyMs = new() { Minimum = 0, Maximum = 86_400_000, Increment = 60_000, Width = 110 };
+    readonly WheelSafeNumericUpDown _stickyMs = new() { Minimum = 0, Maximum = 86_400_000, Increment = 60_000, Width = 110 };
     readonly DataGridView _presets = new()
     {
         Width = 560, Height = 160, AllowUserToAddRows = true, AllowUserToDeleteRows = true,

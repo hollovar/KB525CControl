@@ -6,6 +6,19 @@ All notable changes to KB525C Control are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.6.1] — 2026-08-30
+
+### Fixed
+- **Launched programs come to the front.** A program started from a button (`Run`,
+  `RunInActiveFolder`, `FocusOrLaunch`) opened behind the current window or only flashed on the
+  taskbar, because Windows does not let a background process hand over the foreground. The app
+  now waits for the new window (up to 6 s) and brings it to the front itself; when no new window
+  appears (single-instance program, terminal tab in an existing window) it falls back to the
+  program's process name. See *Known limitations and workarounds* in `docs/configuration.md`.
+- **Settings: the mouse wheel no longer changes values by accident.** Wheeling over (or with the
+  focus on) a drop-down or a numeric field scrolls the page instead of silently changing the
+  setting. An open drop-down list still scrolls with the wheel.
+
 ## [0.6.0] — 2026-08-29
 
 ### Added

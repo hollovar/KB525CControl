@@ -29,12 +29,12 @@ public sealed class ActionEditor : UserControl
         (ActionKind.RunInActiveFolder, "Run a program in the active folder",
             "Like Run, but the working directory is the folder you are in: Total Commander's active panel, or the Explorer window in front (then the last Explorer window, then your profile). Example: program wt.exe, arguments -d .  opens a terminal there."),
         (ActionKind.FocusOrLaunch, "Focus or launch a program",
-            "Brings the program's main window to the front, or starts it when it is not running. Value = process name (WindowsTerminal, Code, notepad++, chrome...) or a command."),
+            "Brings the program's main window to the front, or starts it when it is not running. Value = process name (WindowsTerminal, Code, notepad++, chrome...) or a command. The best choice for single-instance programs: pressing again while it runs brings its window forward."),
         (ActionKind.Macro, "Macro (several steps)",
             "Runs the steps in order, one per line:\n  hotkey ctrl+l\n  text hello\\n        (\\n = Enter, \\t = Tab)\n  delay 300            (milliseconds)\n  run wt.exe -d .      (program, then arguments; quote paths with spaces)"),
     };
 
-    readonly ComboBox _kind = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 420, DropDownWidth = 420 };
+    readonly WheelSafeComboBox _kind = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 420, DropDownWidth = 420 };
     readonly Label _help = new() { AutoSize = true, ForeColor = SystemColors.GrayText, MaximumSize = new Size(560, 0), Margin = new Padding(0, 2, 0, 8) };
     readonly Label _valueLabel = new() { AutoSize = true, Text = "Value", Margin = new Padding(0, 6, 8, 0) };
     readonly TextBox _value = new() { Width = 420 };
