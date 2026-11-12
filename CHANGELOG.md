@@ -6,6 +6,8 @@ All notable changes to KB525C Control are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.6.2] — 2026-11-12
+
 ### Fixed
 - **A busy command channel is reported as busy.** Dell Peripheral Core 2.4 holds the command
   channel so tightly that it disappears from the device list altogether; the app then blamed
@@ -74,5 +76,8 @@ In order of appearance:
   **named-pipe IPC** (`\\.\pipe\KB525CControl`) and the `kb525c` command-line client, including
   `kb525c run` / `kb525c watch`; application text English only.
 
-[Unreleased]: https://github.com/hollovar/KB525CControl/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/hollovar/KB525CControl/compare/v0.6.2...HEAD
+[0.6.2]: https://github.com/hollovar/KB525CControl/compare/v0.6.1...v0.6.2
+[0.6.1]: https://github.com/hollovar/KB525CControl/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/hollovar/KB525CControl/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/hollovar/KB525CControl/releases/tag/v0.5.0
