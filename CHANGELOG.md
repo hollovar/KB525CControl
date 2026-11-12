@@ -6,6 +6,12 @@ All notable changes to KB525C Control are recorded here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- **A busy command channel is reported as busy.** Dell Peripheral Core 2.4 holds the command
+  channel so tightly that it disappears from the device list altogether; the app then blamed
+  "missing vendor interfaces (unsupported firmware?)". It now says the channel is busy and points
+  at `DPMService`, as it does for older Dell software.
+
 ## [0.6.1] — 2026-08-30
 
 ### Fixed

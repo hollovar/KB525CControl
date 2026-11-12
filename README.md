@@ -312,6 +312,8 @@ More on hooks, other editors and CI scripts: [docs/integrations.md](docs/integra
 - **Tray icon grey, balloon "command channel is busy"** — `DPMService` is running. Disable it
   (`install.ps1` does; or `Set-Service DPMService -StartupType Disabled; Stop-Service DPMService`
   as administrator).
+- **It worked, then stopped after a Dell update** — updating Dell Display and Peripheral Manager
+  reinstalls `DPMService` with automatic start. Disable it again with the command above.
 - **"Keyboard not detected"** — plug in the KB525C; a different Dell model is reported with its
   PID. Tray menu → **Reconnect** after a sleep/resume if needed.
 - **A meeting button does nothing in the app** — shortcuts only reach the **focused** window.

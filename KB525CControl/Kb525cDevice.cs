@@ -174,6 +174,21 @@ public sealed class Kb525cDevice : IDisposable
         var inputDev = devices.FirstOrDefault(d =>
             d.DevicePath.Contains(InputPathMarker, StringComparison.OrdinalIgnoreCase));
 
+        // Almost certainly Dell Peripheral Manager, which opens the interface exclusively.
+        const string busy =
+            "The command channel is busy. Disable the DPMService (Dell Peripheral Manager) service.";
+
+        if (featureDev is null && inputDev is not null)
+        {
+            // Both collections belong to the same USB interface, so the command collection
+            // exists whenever the event collection does. It is absent from the list only
+            // because an exclusive owner makes even the attribute query fail with a sharing
+            // violation, and HidSharp skips devices it cannot query. Newer Dell Peripheral
+            // Manager builds hold it this way.
+            SetError(busy);
+            return;
+        }
+
         if (featureDev is null || inputDev is null)
         {
             SetError("KB525C found, but its vendor interfaces are missing (unsupported firmware?).");
@@ -182,8 +197,7 @@ public sealed class Kb525cDevice : IDisposable
 
         if (!featureDev.TryOpen(out var featureStream))
         {
-            // Almost certainly Dell Peripheral Manager, which opens the interface exclusively.
-            SetError("The command channel is busy. Disable the DPMService (Dell Peripheral Manager) service.");
+            SetError(busy);
             return;
         }
 
